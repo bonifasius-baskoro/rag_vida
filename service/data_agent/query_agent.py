@@ -11,13 +11,13 @@ def query_builder_agent(chat):
 
         Id                                    int64
         age                                   int64
-        gender                               object
+        gender                               object  kolom gender berisi "Male" dan "Female"
         job                                  object
-        monthly_salary                      float64
-        electrical_bill_monthly             float64
-        max_Day_past_due_loan                 int64
+        monthly_salary                      float64 dalam rupiah
+        electrical_bill_monthly             float64 dalam rupiah
+        max_Day_past_due_loan                 int64 
         current_day_past_due_loan             int64
-        loan_outstanding_total              float64
+        loan_outstanding_total              float64 dalam rupiah
         credit_score                          int64
         last_date_loan_created       datetime64[ns]
 
@@ -35,15 +35,20 @@ def query_builder_agent(chat):
     return result
 
 def query_result(chat):
+    print("run query builder")
     query = query_builder_agent(chat)
-    result = {}
     if "ERROR" in query:
         return "ERROR"
+    if "SELECT" not in query.upper():
+        return "ERROR NO QUERY"
+    print("this is the query"+ query)
     try:
-        return execute_query(query)
+        result = execute_query(query)
+        return result ,query
     except DatabaseError as e:
         print(f'database error {e}')
         return f'database error {e}'
     except Exception as e:
         print(f'something error{e}')
         return f'something error{e}'
+
