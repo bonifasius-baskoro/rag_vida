@@ -4,11 +4,15 @@ from service.data_agent.query_agent import query_result
 from service.chatbot import execute_chat
 from db.vector_db_instance import check_connection_vectordb
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+# For specific endpoint
+
 import sqlite3
 import os
 
 app = Flask(__name__)
-
+CORS(app, resources={r"/api/v1/chat": {"origins": "*"}})
 port = int(os.getenv("PORT", 8080))
  # You can change this port number as needed
 
