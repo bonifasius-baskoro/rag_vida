@@ -5,9 +5,12 @@ from service.chatbot import execute_chat
 from db.vector_db_instance import check_connection_vectordb
 from flask import Flask, request, jsonify
 import sqlite3
+import os
 
 app = Flask(__name__)
-PORT = 5050  # You can change this port number as needed
+
+port = int(os.getenv("PORT", 8080))
+ # You can change this port number as needed
 
 @app.route('/api', methods=['GET', 'POST'])
 def handle_requests():
@@ -100,7 +103,7 @@ if __name__ == '__main__':
     if table_name and vectordb_conn_check:
         print(f"Server starting... Database initialized with table: {table_name}")
         print(f"Vector db connected!")
-        app.run(host='0.0.0.0', port=PORT, debug=True)
+        app.run(host='0.0.0.0', port=port, debug=True)
     else:
         if not vectordb_conn_check:
             print("failed connect vector DB")
