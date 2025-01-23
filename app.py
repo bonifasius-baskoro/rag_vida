@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify
 from service.decider import rag_decider_agent
 from db.db_instance import init_credit_db,get_db
 from service.data_agent.query_agent import query_result
 from service.chatbot import execute_chat
 from db.vector_db_instance import check_connection_vectordb
+from flask import Flask, request, jsonify
 import sqlite3
 
 app = Flask(__name__)
