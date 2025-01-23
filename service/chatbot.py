@@ -3,10 +3,17 @@ from .chat import groq_completion
 from utils.query_executor import execute_query
 from exception.DatabaseException import DatabaseError
 from .decider import rag_decider_agent
+from db.vector_db_instance import query_vector_db
 
 
 sys_prompt_no_data = """
     Kamu adalah asisten pintar yang menjawab pertanyaan terkait kredit dan persetujuan pengajuan kredit di Indonesia.
+    Tugas anda adalah
+    1. Hanya memberikan informasi yang secara eksplisit terdapat dalam informasi yang diberikan
+    2. Jika ditanya tentang informasi di luar informasi yang diberikan, katakan dengan jelas "Maaf, saya tidak memiliki informasi tersebut dalam informasi yang saya punya"
+    3. Tidak membuat asumsi atau kesimpulan di luar data yang ada
+    Jawab tidak lebih dari 5 kalimat.
+
 """
 sys_prompt_with_data = """
     kamu adalah asisten pintar perusahaan X yang menjawab pertanyaan terkait kredit dan persetujuan pengajuan kredit di indonesia.
@@ -45,6 +52,14 @@ user_prompt_with_data = """
     Jawab tidak lebih dari 4 kalimat
 
 """
+
+user_prompt_without_data= """
+    Jawaban pertanyaan ini : {question} 
+    Berikut informasi yang didapat dari dokumen serta skor distance dari vektor:
+    ```{chunk_list}```
+    Jawab tidak lebih dari 5 kalimat.
+    Apabila tidak ada informasi yang diberikan dari dokumen, bilang saja tidak ada dokumen yang dimiliki, jangan mencoba jawab dengan mengira-ngira.
+"""
 def execute_chat(chat): 
     """Execute custom SQL query"""
     if(rag_decider_agent(chat) == "ya"):
@@ -62,5 +77,30 @@ def execute_chat(chat):
         except Exception as e:
             return f"error : {e}"
     else:
-        answer =groq_completion(user_prompt_with_data,sys_prompt_no_data)
+        result_query_str=""
+        try:            
+            result_query = query_vector_db(chat)
+            result_query_str= to_string_list_vectordb(result_query)
+            print(result_query_str)
+        except Exception as e:
+            result_query_str = ""
+        answer =groq_completion(user_prompt_without_data.format(question=chat, chunk_list =result_query_str)
+                                ,sys_prompt_no_data)
         return answer
+    
+def to_string_list_vectordb(results):
+    result_string ="Paragraf yang diambil dari dokumen dengan skor distance vector : \n"
+    try:
+        length = len(results['distances'][0])
+        if(length ==0):
+            return ""
+        for i in range(length):
+            
+            chunk = results["documents"][0][i]
+            distance = results["distances"][0][i]
+            num_str= i+1
+            string_temp = f'Distance score: [ {distance} ] chunk {num_str} : {chunk}  \n'
+            result_string += string_temp
+        return result_string
+    except Exception as e:
+        raise Exception("No data")

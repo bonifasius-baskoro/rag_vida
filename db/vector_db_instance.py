@@ -12,6 +12,22 @@ def connect_vectordb():
     )
     return chroma_client
 
+def get_collection(collection="slik_test"):
+    print("get collection vector db...")
+    client = connect_vectordb()
+    collection = client.get_collection("slik_test")
+    return collection
+
+def query_vector_db(query, n_results = 10):
+    print("Query searching for ", query)
+    collection = get_collection()
+    results = collection.query(
+            query_texts=[query],
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"]
+        )
+    return results
+
 def check_connection_vectordb():
     try: 
         chroma_client = chromadb.HttpClient(
